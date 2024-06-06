@@ -3,6 +3,7 @@ package routes
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"go/websrv3/model"
 )
@@ -10,7 +11,14 @@ import (
 var users model.UsersList
 
 func ListAllUsers(w http.ResponseWriter, r *http.Request) {
-	allUsers, err := users.ListAll()
+	offset := r.PathValue("offset")
+	uoffset, err := strconv.ParseUint(offset, 10, 32)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	allUsers, err := users.ListAll(uint(uoffset))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return

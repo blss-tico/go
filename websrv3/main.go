@@ -17,7 +17,7 @@ func main() {
 
 	// CRUD routes for UserList struct
 	// curl -X GET http://localhost:8080/users -H "Accept: application/json" | jq
-	mux.HandleFunc("GET /users", routes.ListAllUsers)
+	mux.HandleFunc("GET /users/{offset}", routes.ListAllUsers)
 
 	// curl -X POST http://localhost:8080/user -H "Content-Type: application/json" -d '{"name": "John Doe", "age": 30}' | jq
 	mux.HandleFunc("POST /user", routes.CreateUser)

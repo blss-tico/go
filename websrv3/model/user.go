@@ -25,14 +25,16 @@ type UsersList struct {
 
 var validate *validator.Validate
 
-func (u *UsersList) ListAll() ([]User, error) {
+func (u *UsersList) ListAll(offset uint) ([]User, error) {
 	db, err := sql.Open("sqlite3", "./db/websrv3.db")
 	if err != nil {
 		return []User{}, err
 	}
 
-	const query string = `SELECT id, name, age FROM users;`
-	rows, err := db.Query(query)
+	// pagination limit 5, offset defined by user
+	const LIMIT uint = 5
+	const query string = `SELECT id, name, age FROM users limit ? offset ?;`
+	rows, err := db.Query(query, LIMIT, offset)
 	if err != nil {
 		return []User{}, err
 	}
