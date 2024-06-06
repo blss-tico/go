@@ -32,7 +32,7 @@ func main() {
 	mux.HandleFunc("DELETE /user/{id}", routes.DeleteUserById)
 
 	// http server instance
-	log.Println("server running on 8080")
+	log.Println("websrv2 running on 8080")
 	err := http.ListenAndServe(":8080", mux)
 	if err != nil {
 		log.Fatalln("server error %v", err)
