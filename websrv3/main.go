@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"go/websrv2/routes"
+	"go/websrv3/routes"
 )
 
 func main() {
@@ -12,7 +12,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	// root/home route
-	// curl -X GET http://localhost:8080/ -H "Accept: application/json" | jq 
+	// curl -X GET http://localhost:8080/ -H "Accept: application/json" | jq
 	mux.HandleFunc("GET /", routes.Home)
 
 	// CRUD routes for UserList struct
@@ -31,9 +31,12 @@ func main() {
 	// curl -X DELETE http://localhost:8080/user/<id> -H "Accept: application/json" | jq
 	mux.HandleFunc("DELETE /user/{id}", routes.DeleteUserById)
 
+	// middlewares for login and header
+	configuredMux := routes.LoggingMiddleware(routes.SetHeaderMiddleware(mux))
+
 	// http server instance
 	log.Println("websrv3 running on 8080")
-	err := http.ListenAndServe(":8080", mux)
+	err := http.ListenAndServe(":8080", configuredMux)
 	if err != nil {
 		log.Fatalln("server error %v", err)
 	}

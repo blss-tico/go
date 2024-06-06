@@ -2,21 +2,20 @@ package routes
 
 import (
 	"encoding/json"
-	"fmt"
-	"log"
 	"net/http"
 
-	"go/websrv2/model"
+	"go/websrv3/model"
 )
 
 var users model.UsersList
 
 func ListAllUsers(w http.ResponseWriter, r *http.Request) {
-	log.Printf("\n Method: [%v] - Route: [%v] - Remote Address: [%v]", r.Method, r.RequestURI, r.RemoteAddr)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusFound)
+	allUsers, err := users.ListAll()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
 
-	allUsers := users.ListAll()
 	if len(allUsers) == 0 {
 		response := Response{
 			Msg: "users not found",
@@ -29,7 +28,8 @@ func ListAllUsers(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	err := json.NewEncoder(w).Encode(allUsers)
+	w.WriteHeader(http.StatusFound)
+	err = json.NewEncoder(w).Encode(allUsers)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -37,9 +37,6 @@ func ListAllUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreateUser(w http.ResponseWriter, r *http.Request) {
-	log.Printf("\n Method: [%v] - Route: [%v] - Remote Address: [%v]", r.Method, r.RequestURI, r.RemoteAddr)
-	w.Header().Set("Content-Type", "application/json")
-
 	var userTemp model.User
 	err := json.NewDecoder(r.Body).Decode(&userTemp)
 	if err != nil {
@@ -47,7 +44,12 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := users.Create(userTemp.Name, userTemp.Age)
+	response, err := users.Create(userTemp.Name, userTemp.Age)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	w.WriteHeader(http.StatusCreated)
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
@@ -57,9 +59,6 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetUserById(w http.ResponseWriter, r *http.Request) {
-	log.Printf("\n Method: [%v] - Route: [%v] - Remote Address: [%v]", r.Method, r.RequestURI, r.RemoteAddr)
-	w.Header().Set("Content-Type", "application/json")
-
 	id := r.PathValue("id")
 	user, err := users.Read(id)
 	if err != nil {
@@ -74,9 +73,6 @@ func GetUserById(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateUserById(w http.ResponseWriter, r *http.Request) {
-	log.Printf("\n Method: [%v] - Route: [%v] - Remote Address: [%v]", r.Method, r.RequestURI, r.RemoteAddr)
-	w.Header().Set("Content-Type", "application/json")
-
 	var userTemp model.User
 
 	id := r.PathValue("id")
@@ -100,18 +96,14 @@ func UpdateUserById(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteUserById(w http.ResponseWriter, r *http.Request) {
-	log.Printf("\n Method: [%v] - Route: [%v] - Remote Address: [%v]", r.Method, r.RequestURI, r.RemoteAddr)
-	w.Header().Set("Content-Type", "application/json")
-
 	id := r.PathValue("id")
 
-	err := users.Delete(id)
+	msg, err := users.Delete(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotModified)
 		return
 	}
 
-	msg := fmt.Sprintf("user %v deleted", id)
 	response := Response{
 		Msg: msg,
 	}
